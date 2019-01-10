@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2/bson"
@@ -18,15 +19,23 @@ import (
 var config = Config{}
 var dao = MoviesDAO{}
 
+// App exported application for testing
+type App struct {
+	Router *mux.Router
+	dao    MoviesDAO
+}
+
+// AllMoviesEndPoint Get all movies in database
 func AllMoviesEndPoint(w http.ResponseWriter, r *http.Request) {
 	movies, err := dao.FindAll()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondWithJson(w, http.StatusOK, movies)
+	respondWithJSON(w, http.StatusOK, movies)
 }
 
+// FindMovieEndpoint Get sinlge movie by id
 func FindMovieEndpoint(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	movie, err := dao.FindById(params["id"])
@@ -34,9 +43,10 @@ func FindMovieEndpoint(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Invalid Movie ID")
 		return
 	}
-	respondWithJson(w, http.StatusOK, movie)
+	respondWithJSON(w, http.StatusOK, movie)
 }
 
+// CreateMovieEndPoint Create movie with payload
 func CreateMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var movie Movie
@@ -49,9 +59,10 @@ func CreateMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondWithJson(w, http.StatusCreated, movie)
+	respondWithJSON(w, http.StatusCreated, movie)
 }
 
+// UpdateMovieEndPoint Update movie API
 func UpdateMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var movie Movie
@@ -63,9 +74,10 @@ func UpdateMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondWithJson(w, http.StatusOK, map[string]string{"result": "success"})
+	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 
+// DeleteMovieEndPoint Delete movie API
 func DeleteMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var movie Movie
@@ -77,38 +89,53 @@ func DeleteMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondWithJson(w, http.StatusOK, map[string]string{"result": "success"})
+	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {
-	respondWithJson(w, code, map[string]string{"error": msg})
+	respondWithJSON(w, code, map[string]string{"error": msg})
 }
 
-func respondWithJson(w http.ResponseWriter, code int, payload interface{}) {
+// respondWithJSON Response Method
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	fmt.Printf("\nStatus %d, %s", code, time.Now())
 	response, _ := json.Marshal(payload)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(response)
 }
 
-// Parse the configuration file 'config.toml', and establish a connection to DB
-func init() {
-	config.Read()
-
-	dao.Server = config.Server
-	dao.Database = config.Database
-	dao.Connect()
-}
-
-func main() {
+// Runr run app
+func (a *App) Runr(port int) {
 	r := mux.NewRouter()
+	a.Router = r
 	r.HandleFunc("/movies", AllMoviesEndPoint).Methods("GET")
 	r.HandleFunc("/movies", CreateMovieEndPoint).Methods("POST")
 	r.HandleFunc("/movies", UpdateMovieEndPoint).Methods("PUT")
 	r.HandleFunc("/movies", DeleteMovieEndPoint).Methods("DELETE")
 	r.HandleFunc("/movies/{id}", FindMovieEndpoint).Methods("GET")
-	fmt.Printf("App running on port %d", config.Port)
-	if err := http.ListenAndServe(":"+strconv.Itoa(config.Port), r); err != nil {
+	fmt.Printf("App running on port %d", port)
+	if err := http.ListenAndServe(":"+strconv.Itoa(port), r); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// Initializer init app
+func (a *App) Initializer(server string, database string) {
+	dao.Server = server
+	dao.Database = database
+	dao.Connect()
+}
+
+// Parse the configuration file 'config.toml', and establish a connection to DB
+func init() {
+	config.Read()
+	a := App{}
+	a.Initializer(config.Server, config.Database)
+}
+
+func main() {
+	a := App{}
+	a.dao = dao
+	a.Runr(config.Port)
 }
