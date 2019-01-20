@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -120,10 +121,19 @@ func (a *App) Runr(port int) {
 	}
 }
 
+func getenv(key string, fallback string) {
+	value = os.Getenv(key)
+	if len(value) == 0 {
+		return fallback
+	}
+
+	return value
+}
+
 // Initializer init app
 func (a *App) Initializer(server string, database string) {
-	dao.Server = server
-	dao.Database = database
+	dao.Server = getenv("MONGODB_URI", server)
+	dao.Database = getenv("DATABASE", database)
 	dao.Connect()
 }
 
