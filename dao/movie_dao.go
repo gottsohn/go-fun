@@ -3,7 +3,7 @@ package dao
 import (
 	"log"
 
-	. "../models"
+	. "github.com/gottsohn/go-fun/models"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )

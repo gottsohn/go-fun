@@ -11,9 +11,9 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2/bson"
 
-	. "./config"
-	. "./dao"
-	. "./models"
+	. "github.com/gottsohn/go-fun/config"
+	. "github.com/gottsohn/go-fun/dao"
+	. "github.com/gottsohn/go-fun/models"
 )
 
 var config = Config{}
