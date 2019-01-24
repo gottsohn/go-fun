@@ -49,6 +49,11 @@ func (m *MoviesDAO) Delete(movie models.Movie) error {
 	return err
 }
 
+func (m *MoviesDAO) RemoveAll() error {
+	_, err := db.C(COLLECTION).RemoveAll(bson.M{})
+	return err
+}
+
 func (m *MoviesDAO) Update(movie models.Movie) error {
 	err := db.C(COLLECTION).UpdateId(movie.ID, &movie)
 	return err

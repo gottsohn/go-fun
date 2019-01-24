@@ -19,6 +19,7 @@ import (
 
 var config = conf.Config{}
 var dao = db.MoviesDAO{}
+var a App
 
 // App exported application for testing
 type App struct {
@@ -108,6 +109,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 
 // Runr run app
 func (a *App) Runr(port int) {
+	a.dao = dao
 	r := mux.NewRouter()
 	a.Router = r
 	r.HandleFunc("/movies", AllMoviesEndPoint).Methods("GET")
@@ -132,6 +134,7 @@ func getenv(key string, fallback string) string {
 
 // Initializer init app
 func (a *App) Initializer(server string, database string) {
+	config.Read()
 	dao.Server = getenv("MONGODB_URI", server)
 	dao.Database = getenv("DATABASE", database)
 	dao.Connect()
@@ -139,13 +142,12 @@ func (a *App) Initializer(server string, database string) {
 
 // Parse the configuration file 'config.toml', and establish a connection to DB
 func init() {
-	config.Read()
+	fmt.Println("App Initialized")
 	a := App{}
 	a.Initializer(config.Server, config.Database)
 }
 
 func main() {
-	a := App{}
-	a.dao = dao
+	fmt.Println("app.main()")
 	a.Runr(config.Port)
 }
