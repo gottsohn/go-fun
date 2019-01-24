@@ -5,7 +5,10 @@ import (
 	"testing"
 )
 
+var a App
+
 func TestMain(t *testing.T) {
+	a = App{}
 	sanityCheck(t)
 }
 

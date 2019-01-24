@@ -12,18 +12,18 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2/bson"
 
-	. "github.com/gottsohn/go-fun/config"
-	. "github.com/gottsohn/go-fun/dao"
-	. "github.com/gottsohn/go-fun/models"
+	conf "github.com/gottsohn/go-fun/config"
+	db "github.com/gottsohn/go-fun/dao"
+	models "github.com/gottsohn/go-fun/models"
 )
 
-var config = Config{}
-var dao = MoviesDAO{}
+var config = conf.Config{}
+var dao = db.MoviesDAO{}
 
 // App exported application for testing
 type App struct {
 	Router *mux.Router
-	dao    MoviesDAO
+	dao    db.MoviesDAO
 }
 
 // AllMoviesEndPoint Get all movies in database
@@ -50,7 +50,7 @@ func FindMovieEndpoint(w http.ResponseWriter, r *http.Request) {
 // CreateMovieEndPoint Create movie with payload
 func CreateMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var movie Movie
+	var movie models.Movie
 	if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
@@ -66,7 +66,7 @@ func CreateMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 // UpdateMovieEndPoint Update movie API
 func UpdateMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var movie Movie
+	var movie models.Movie
 	if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
@@ -81,7 +81,7 @@ func UpdateMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 // DeleteMovieEndPoint Delete movie API
 func DeleteMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var movie Movie
+	var movie models.Movie
 	if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
