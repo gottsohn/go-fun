@@ -40,7 +40,7 @@ func AllMoviesEndPoint(w http.ResponseWriter, r *http.Request) {
 // FindMovieEndpoint Get sinlge movie by id
 func FindMovieEndpoint(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	movie, err := dao.FindById(params["id"])
+	movie, err := dao.FindByID(params["id"])
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid Movie ID")
 		return
