@@ -12,18 +12,19 @@ import (
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2/bson"
 
-	. "github.com/gottsohn/go-fun/config"
-	. "github.com/gottsohn/go-fun/dao"
-	. "github.com/gottsohn/go-fun/models"
+	conf "github.com/gottsohn/go-fun/config"
+	db "github.com/gottsohn/go-fun/dao"
+	models "github.com/gottsohn/go-fun/models"
 )
 
-var config = Config{}
-var dao = MoviesDAO{}
+var config = conf.Config{}
+var dao = db.MoviesDAO{}
+var a App
 
 // App exported application for testing
 type App struct {
 	Router *mux.Router
-	dao    MoviesDAO
+	dao    db.MoviesDAO
 }
 
 // AllMoviesEndPoint Get all movies in database
@@ -39,7 +40,7 @@ func AllMoviesEndPoint(w http.ResponseWriter, r *http.Request) {
 // FindMovieEndpoint Get sinlge movie by id
 func FindMovieEndpoint(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	movie, err := dao.FindById(params["id"])
+	movie, err := dao.FindByID(params["id"])
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid Movie ID")
 		return
@@ -50,7 +51,7 @@ func FindMovieEndpoint(w http.ResponseWriter, r *http.Request) {
 // CreateMovieEndPoint Create movie with payload
 func CreateMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var movie Movie
+	var movie models.Movie
 	if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
@@ -66,7 +67,7 @@ func CreateMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 // UpdateMovieEndPoint Update movie API
 func UpdateMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var movie Movie
+	var movie models.Movie
 	if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
@@ -81,7 +82,7 @@ func UpdateMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 // DeleteMovieEndPoint Delete movie API
 func DeleteMovieEndPoint(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var movie Movie
+	var movie models.Movie
 	if err := json.NewDecoder(r.Body).Decode(&movie); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
@@ -108,6 +109,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 
 // Runr run app
 func (a *App) Runr(port int) {
+	a.dao = dao
 	r := mux.NewRouter()
 	a.Router = r
 	r.HandleFunc("/movies", AllMoviesEndPoint).Methods("GET")
@@ -132,6 +134,7 @@ func getenv(key string, fallback string) string {
 
 // Initializer init app
 func (a *App) Initializer(server string, database string) {
+	config.Read()
 	dao.Server = getenv("MONGODB_URI", server)
 	dao.Database = getenv("DATABASE", database)
 	dao.Connect()
@@ -139,13 +142,12 @@ func (a *App) Initializer(server string, database string) {
 
 // Parse the configuration file 'config.toml', and establish a connection to DB
 func init() {
-	config.Read()
+	fmt.Println("App Initialized")
 	a := App{}
 	a.Initializer(config.Server, config.Database)
 }
 
 func main() {
-	a := App{}
-	a.dao = dao
+	fmt.Println("app.main()")
 	a.Runr(config.Port)
 }
