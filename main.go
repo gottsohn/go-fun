@@ -108,7 +108,8 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 }
 
 // Runr run app
-func (a *App) Runr(port int) {
+func (a *App) Runr(defaultPort int) {
+	var port = getenv("PORT", strconv.Itoa(defaultPort))
 	a.dao = dao
 	r := mux.NewRouter()
 	a.Router = r
@@ -117,8 +118,8 @@ func (a *App) Runr(port int) {
 	r.HandleFunc("/movies", UpdateMovieEndPoint).Methods("PUT")
 	r.HandleFunc("/movies", DeleteMovieEndPoint).Methods("DELETE")
 	r.HandleFunc("/movies/{id}", FindMovieEndpoint).Methods("GET")
-	fmt.Printf("App running on port %d", port)
-	if err := http.ListenAndServe(":"+strconv.Itoa(port), r); err != nil {
+	fmt.Printf("App running on port %s", port)
+	if err := http.ListenAndServe(":"+port, r); err != nil {
 		log.Fatal(err)
 	}
 }
